@@ -9,62 +9,100 @@
         .card { width: 100%; max-width: 350px; background: white; padding: 32px; border-radius: 20px; box-shadow: 0 15px 35px -5px rgba(15, 76, 58, 0.15); border: 1px solid #f1efe7; text-align: center; box-sizing: border-box; }
         .brand-header { color: #0F4C3A; font-size: 24px; font-weight: bold; margin-bottom: 24px; letter-spacing: 1px; line-height: 1.3; }
         input { width: 90%; text-align: center; font-size: 26px; padding: 12px; border: 2px solid #e2dfd5; border-radius: 12px; margin-bottom: 16px; font-weight: bold; color: #0F4C3A; background: #faf9f5; }
-        button { width: 100%; background: #0F4C3A; color: white; font-weight: bold; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+        input:focus { outline: none; border-color: #0F4C3A; }
+        button { width: 100%; background: #0F4C3A; color: white; font-weight: bold; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; transition: background 0.2s; border: 1px solid #0F4C3A; }
+        button:hover { background: #0a3327; }
         .hidden { display: none !important; }
+        .ready-card { background: #0F4C3A; color: white; border: 1px solid #0F4C3A; }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; color: #D4AF37; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+        .giant-ready-text { color: #D4AF37; font-size: 28px; font-weight: 900; letter-spacing: 0.5px; margin-top: 24px; margin-bottom: 16px; font-family: 'Georgia', serif; white-space: nowrap; }
+        .order-badge { background-color: #D4AF37; color: #0F4C3A; display: inline-block; font-size: 42px; font-weight: 900; padding: 4px 24px; border-radius: 12px; margin: 12px auto; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .mute-btn { background: transparent; color: #D4AF37; border: 2px solid #D4AF37; margin-bottom: 12px; padding: 12px; font-size: 14px; width: 100%; font-weight: bold; border-radius: 12px; cursor: pointer; box-sizing: border-box; }
+        .mute-btn:hover { background: rgba(212, 175, 55, 0.1); }
         .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 16px; border-radius: 12px; font-family: sans-serif; font-size: 13px; text-align: left; color: #0F4C3A; margin-top: 12px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
+    <!-- 1. ENTRY CARD -->
     <div id="setup-screen" class="card">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
+        <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number. We'll buzz you when it's ready!</p>
+        <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="e.g. 42">
+        <button id="start-btn">🔔 Start Tracking</button>
         
-        <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="Order #">
-
-        <!-- Android Prompt Action Layout Framework Button -->
-        <button id="start-btn">🔔 Enable Pop-up Alerts</button>
-
-        <!-- iPhone Dynamic Instructions Block (Shown only on iOS browsers) -->
-        <div id="ios-instructions" class="hidden">
-            <div style="font-weight: bold; text-align: center; margin-bottom: 6px; font-size: 14px;">🍏 iPhone User Setup Required:</div>
-            To allow background pop-up alerts on Apple devices:
+        <div id="ios-instructions" class="hidden ios-box">
+            <div style="font-weight: bold; text-align: center; margin-bottom: 6px; font-size: 14px;">🍏 iPhone Setup Required:</div>
+            To unlock true background pop-up alerts on Apple devices:
             <ol style="margin: 6px 0 0 20px; padding: 0;">
-                <li>Tap the <strong>Share</strong> button (box with upward arrow) at the bottom.</li>
+                <li>Tap the <strong>Share</strong> button at the bottom of Safari.</li>
                 <li>Select <strong>"Add to Home Screen"</strong> from the menu.</li>
-                <li>Open the newly added app icon on your desktop to track your order!</li>
+                <li>Open the home screen app to track your order!</li>
             </ol>
         </div>
     </div>
 
+    <!-- 2. LOADING CARD -->
     <div id="waiting-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
-        <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
-        <h2 style="font-size: 20px; margin-bottom: 8px; color: #0F4C3A;">Background Lock Active</h2>
-        <p style="color: #6b6661; font-size: 14px; font-family: sans-serif; margin-bottom: 0;">You can safely lock your screen or close this app. A native notification banner will slide onto your screen when your coffee is poured!</p>
+        <div class="pulse" style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+        <h2 style="font-size: 22px; margin-bottom: 8px; color: #0F4C3A;">Tracking Order #<span id="display-number"></span></h2>
+        <p style="color: #6b6661; font-size: 14px; font-family: sans-serif; margin-bottom: 16px;">Your traditional brew is being crafted. You can safely close this screen or lock your phone!</p>
+        <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
     </div>
 
+    <!-- 3. SUCCESS CARD WITH LOGO AND RESET BUTTON -->
+    <div id="ready-screen" class="card ready-card hidden">
+        <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
+        <div class="giant-ready-text">ORDER READY! 😊</div>
+        <div class="text-xs uppercase tracking-widest text-emerald-200 font-sans font-bold">Verify Counter Receipt</div>
+        <div id="ready-order-badge" class="order-badge">#--</div>
+        <h2 style="font-size: 16px; margin-bottom: 24px; font-family: sans-serif; font-weight: normal; color: #fcfbf7; line-height: 1.4;">Please present this screen to the counter to collect your items.</h2>
+        <button id="mute-btn" class="mute-btn">⏹️ Mute Alarm</button>
+        <button onclick="clearTrackingSession()" style="background: white; color: #0F4C3A; border: 1px solid white;">Track Another Order</button>
+    </div>
     <script>
         const setupScreen = document.getElementById('setup-screen');
         const waitingScreen = document.getElementById('waiting-screen');
+        const readyScreen = document.getElementById('ready-screen');
         const orderInput = document.getElementById('order-input');
         const startBtn = document.getElementById('start-btn');
-        const iosInstructions = document.getElementById('ios-instructions');
+        const displayNumber = document.getElementById('display-number');
+        const readyOrderBadge = document.getElementById('ready-order-badge');
+        const muteBtn = document.getElementById('mute-btn');
 
         const urlParams = new URLSearchParams(window.location.search);
         const storeLocation = urlParams.get('loc') || '1';
+        const directNum = urlParams.get('num');
+        const directStatus = urlParams.get('status');
 
-        // Detect if user device profile environment is an Apple iPhone/iPad
+        let sharedAudioCtx = null;
+        let repeatingInterval = null;
+        let trackingInterval = null;
+
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        // Check if app is running as a standalone app saved to home screen
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-        if (isIOS && !isStandalone) {
-            // Hide button and force iOS instructions if they haven't added to Home Screen yet
+        // If the client arrives via clicking the background notification banner, skip straight to green card
+        if (directStatus === 'ready' && directNum) {
+            setupScreen.classList.add('hidden');
+            readyScreen.classList.remove('hidden');
+            readyOrderBadge.innerText = `#${directNum}`;
+            window.addEventListener('DOMContentLoaded', () => {
+                activateiOSAudioEngine();
+                setTimeout(() => { fireExtendedAlert(); }, 500);
+            });
+        } else if (isIOS && !isStandalone) {
             startBtn.classList.add('hidden');
-            iosInstructions.classList.remove('hidden');
+            document.getElementById('ios-instructions').classList.remove('hidden');
         }
 
-        // Convert base64 encryption formatting string elements for secure web storage protocols
+        function clearTrackingSession() {
+            // Cleans tracking parameters out of URL string to load back onto card #1 seamlessly
+            window.location.href = window.location.pathname + `?loc=${storeLocation}`;
+        }
+
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -74,47 +112,108 @@
             return outputArray;
         }
 
-        startBtn.addEventListener('click', async () => {
-            const num = orderInput.value.trim();
-            if (!num) return alert('Please enter an order number.');
+        function activateiOSAudioEngine() {
+            try {
+                sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const b = sharedAudioCtx.createBuffer(1, 1, 22050);
+                const s = sharedAudioCtx.createBufferSource();
+                s.buffer = b; s.connect(sharedAudioCtx.destination); s.start(0);
+            } catch (e) {}
+        }
 
+        function playSingleChimePass() {
+            if (!sharedAudioCtx) return;
+            try {
+                const m = [
+                    { t: 0.0, f: 523.25, v: 0.4 },
+                    { t: 0.1, f: 659.25, v: 0.4 },
+                    { t: 0.2, f: 783.99, v: 0.4 },
+                    { t: 0.3, f: 1046.50, v: 0.5 }
+                ];
+                m.forEach((n) => {
+                    const o = sharedAudioCtx.createOscillator();
+                    const g = sharedAudioCtx.createGain();
+                    o.connect(g); g.connect(sharedAudioCtx.destination);
+                    o.type = 'sine'; o.frequency.setValueAtTime(n.f, sharedAudioCtx.currentTime + n.t);
+                    g.gain.setValueAtTime(n.v, sharedAudioCtx.currentTime + n.t);
+                    g.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + n.t + 1.0);
+                    o.start(sharedAudioCtx.currentTime + n.t); o.stop(sharedAudioCtx.currentTime + n.t + 1.1);
+                });
+            } catch (err) {}
+        }
+
+        function fireExtendedAlert() {
+            if (!sharedAudioCtx) return;
+            sharedAudioCtx.resume();
+            playSingleChimePass();
+            if ('vibrate' in navigator) { navigator.vibrate(500); }
+            let count = 0;
+            repeatingInterval = setInterval(() => {
+                count++;
+                if (count >= 6) {
+                    clearInterval(repeatingInterval);
+                    if ('vibrate' in navigator) { navigator.vibrate(0); }
+                    muteBtn.classList.add('hidden');
+                    return;
+                }
+                playSingleChimePass();
+                if ('vibrate' in navigator) { navigator.vibrate(500); }
+            }, 1500);
+        }
+
+        muteBtn.addEventListener('click', () => {
+            if (repeatingInterval) {
+                clearInterval(repeatingInterval);
+                repeatingInterval = null;
+                if ('vibrate' in navigator) { navigator.vibrate(0); }
+                muteBtn.classList.add('hidden');
+            }
+        });
+
+        startBtn.addEventListener('click', async () => {
+            const currentOrderNum = orderInput.value.trim();
+            if (!currentOrderNum) return alert('Please enter an order number.');
+
+            activateiOSAudioEngine();
+            displayNumber.innerText = currentOrderNum;
+            readyOrderBadge.innerText = `#${currentOrderNum}`;
+            setupScreen.classList.add('hidden');
+            waitingScreen.classList.remove('hidden');
+
+            // 1. Setup the true background push manager connection
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 try {
-                    // Register the background Service Worker file
                     const registration = await navigator.serviceWorker.register('/sw.js');
-                    
-                    // Request browser pop-up permission from user
                     const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') return alert('You must click "Allow" to receive background notifications.');
-
-                    // Fetch encryption keys from our server
-                    const keyRes = await fetch('/api/vapid-public-key');
-                    const keyData = await keyRes.json();
-                    const convertedPublicKey = urlBase64ToUint8Array(keyData.publicKey);
-
-                    // Generate user background push identity token parameters
-                    const subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: convertedPublicKey
-                    });
-
-                    // Save token up to backend database list
-                    await fetch('/api/save-subscription', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderNumber: num, location: storeLocation, subscription: subscription })
-                    });
-
-                    setupScreen.classList.add('hidden');
-                    waitingScreen.classList.remove('hidden');
-
-                } catch (err) {
-                    console.error("Push connection registration process broken:", err);
-                    alert("Error registering notification pipeline link.");
-                }
-            } else {
-                alert("This device browser configuration does not support Web Push protocols.");
+                    if (permission === 'granted') {
+                        const keyRes = await fetch('/api/vapid-public-key');
+                        const keyData = await keyRes.json();
+                        const subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+                        });
+                        await fetch('/api/save-subscription', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderNumber: currentOrderNum, location: storeLocation, subscription: subscription })
+                        });
+                    }
+                } catch (err) { console.log("Push bypassed layout:", err); }
             }
+
+            // 2. Setup the open-tab check fallback poll
+            trackingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/check-status?loc=${storeLocation}&num=${currentOrderNum}`);
+                    const data = await response.json();
+                    if (data.ready) {
+                        clearInterval(trackingInterval);
+                        waitingScreen.classList.add('hidden');
+                        readyScreen.classList.remove('hidden');
+                        fireExtendedAlert();
+                    }
+                } catch (e) {}
+            }, 2000);
         });
     </script>
 </body>
