@@ -22,44 +22,28 @@
         .order-badge { background-color: #D4AF37; color: #0F4C3A; display: inline-block; font-size: 42px; font-weight: 900; padding: 4px 24px; border-radius: 12px; margin: 12px auto; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .mute-btn { background: transparent; color: #D4AF37; border: 2px solid #D4AF37; margin-bottom: 12px; padding: 12px; font-size: 14px; width: 100%; font-weight: bold; border-radius: 12px; cursor: pointer; box-sizing: border-box; }
         .mute-btn:hover { background: rgba(212, 175, 55, 0.1); }
-        .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 16px; border-radius: 12px; font-family: sans-serif; font-size: 14px; text-align: left; color: #0F4C3A; margin-top: 16px; line-height: 1.5; box-sizing: border-box; }
     </style>
-    <script src="https://socket.io"></script>
 </head>
 <body>
 
-    <!-- 1. ENTRY CARD -->
+    <!-- STAGE 1: ENTRY FORM -->
     <div id="setup-screen" class="card">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
-        <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number. We'll buzz you when it's ready!</p>
+        <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number to activate push notifications.</p>
         <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="e.g. 42">
         <button id="start-btn">🔔 Start Tracking</button>
     </div>
 
-    <!-- 2. IPHONE HOME SCREEN SETUP BRIDGE CARD -->
-    <div id="ios-screen" class="card hidden">
-        <div class="brand-header">QAMARIA YEMENI COFFEE</div>
-        <div class="ios-box">
-            <div style="font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 15px;">🍏 iPhone Setup Required:</div>
-            To enable background pop-up alerts on Apple iOS devices:
-            <ol style="margin: 8px 0 0 20px; padding: 0;">
-                <li style="margin-bottom: 6px;">Tap the <strong>Share</strong> button at the bottom of Safari (square with upward arrow).</li>
-                <li style="margin-bottom: 6px;">Scroll down and select <strong>"Add to Home Screen"</strong> from the menu.</li>
-                <li>Close Safari and launch the app icon from your home screen to complete your tracking!</li>
-            </ol>
-        </div>
-    </div>
-
-    <!-- 3. LIVE TRACKER HOURGLASS SCREEN -->
+    <!-- STAGE 2: LIVE WAITING TIMER -->
     <div id="waiting-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <div class="pulse" style="font-size: 48px; margin-bottom: 20px;">⏳</div>
         <h2 style="font-size: 22px; margin-bottom: 8px; color: #0F4C3A;">Tracking Order #<span id="display-number"></span></h2>
-        <p style="color: #6b6661; font-size: 14px; font-family: sans-serif; margin-bottom: 16px;">Your traditional brew is being crafted. You can safely close this screen or lock your phone!</p>
+        <p style="color: #6b6661; font-size: 14px; font-family: sans-serif; margin-bottom: 16px;">Active tracking locked. You can safely lock your screen or close this app now!</p>
         <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
     </div>
 
-    <!-- 4. ORDER READY SUCCESS RECEIPT CARD -->
+    <!-- STAGE 3: ORDER READY RECEIPT -->
     <div id="ready-screen" class="card ready-card hidden">
         <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
         <div class="giant-ready-text">ORDER READY! 😊</div>
@@ -71,7 +55,6 @@
     </div>
     <script>
         const setupScreen = document.getElementById('setup-screen');
-        const iosScreen = document.getElementById('ios-screen');
         const waitingScreen = document.getElementById('waiting-screen');
         const readyScreen = document.getElementById('ready-screen');
         const orderInput = document.getElementById('order-input');
@@ -89,38 +72,21 @@
         let repeatingInterval = null;
         let trackingInterval = null;
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-        // AUTOMATED MEMORY HOOK: If launching fresh from the iPhone home screen app icon,
-        // automatically pull down the saved order number and start tracking instantly!
-        window.addEventListener('DOMContentLoaded', () => {
-            if (directStatus === 'ready' && directNum) {
-                setupScreen.classList.add('hidden');
-                readyScreen.classList.remove('hidden');
-                readyOrderBadge.innerText = `#${directNum}`;
+        if (directStatus === 'ready' && directNum) {
+            setupScreen.classList.add('hidden');
+            readyScreen.classList.remove('hidden');
+            readyOrderBadge.innerText = `#${directNum}`;
+            window.addEventListener('DOMContentLoaded', () => {
                 activateiOSAudioEngine();
                 setTimeout(() => { fireExtendedAlert(); }, 500);
-            } else if (isIOS && isStandalone) {
-                const savedOrder = localStorage.getItem('qamaria_saved_order');
-                if (savedOrder) {
-                    setupScreen.classList.add('hidden');
-                    waitingScreen.classList.remove('hidden');
-                    displayNumber.innerText = savedOrder;
-                    readyOrderBadge.innerText = `#${savedOrder}`;
-                    activateiOSAudioEngine();
-                    initiateTrackingLoop(savedOrder);
-                }
-            }
-        });
+            });
+        }
 
         function clearTrackingSession() {
-            const currentNum = readyOrderBadge.innerText.replace('#','');
-            localStorage.removeItem('qamaria_saved_order'); // Reset vault storage tracking parameters
             fetch('/api/clear-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderNumber: currentNum, location: storeLocation })
+                body: JSON.stringify({ orderNumber: readyOrderBadge.innerText.replace('#',''), location: storeLocation })
             }).then(() => {
                 window.location.href = window.location.pathname + `?loc=${storeLocation}`;
             });
@@ -144,21 +110,16 @@
             } catch (e) {}
         }
 
-        function playSingleChimePass() {
+        function playChime() {
             if (!sharedAudioCtx) return;
             try {
-                const m = [
-                    { t: 0.0, f: 523.25, v: 0.4 },
-                    { t: 0.1, f: 659.25, v: 0.4 },
-                    { t: 0.2, f: 783.99, v: 0.4 },
-                    { t: 0.3, f: 1046.50, v: 0.5 }
-                ];
+                const m = [{ t: 0.0, f: 523.25 }, { t: 0.1, f: 659.25 }, { t: 0.2, f: 783.99 }, { t: 0.3, f: 1046.50 }];
                 m.forEach((n) => {
                     const o = sharedAudioCtx.createOscillator();
                     const g = sharedAudioCtx.createGain();
                     o.connect(g); g.connect(sharedAudioCtx.destination);
                     o.type = 'sine'; o.frequency.setValueAtTime(n.f, sharedAudioCtx.currentTime + n.t);
-                    g.gain.setValueAtTime(n.v, sharedAudioCtx.currentTime + n.t);
+                    g.gain.setValueAtTime(0.4, sharedAudioCtx.currentTime + n.t);
                     g.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + n.t + 1.0);
                     o.start(sharedAudioCtx.currentTime + n.t); o.stop(sharedAudioCtx.currentTime + n.t + 1.1);
                 });
@@ -168,7 +129,7 @@
         function fireExtendedAlert() {
             if (!sharedAudioCtx) return;
             sharedAudioCtx.resume();
-            playSingleChimePass();
+            playChime();
             if ('vibrate' in navigator) { navigator.vibrate(500); }
             let count = 0;
             repeatingInterval = setInterval(() => {
@@ -179,7 +140,7 @@
                     muteBtn.classList.add('hidden');
                     return;
                 }
-                playSingleChimePass();
+                playChime();
                 if ('vibrate' in navigator) { navigator.vibrate(500); }
             }, 1500);
         }
@@ -193,10 +154,19 @@
             }
         });
 
-        // Split off core polling function layout parameters
-        function initiateTrackingLoop(targetNum) {
+        startBtn.addEventListener('click', async () => {
+            const currentOrderNum = orderInput.value.trim();
+            if (!currentOrderNum) return alert('Please enter an order number.');
+
+            activateiOSAudioEngine();
+            displayNumber.innerText = currentOrderNum;
+            readyOrderBadge.innerText = `#${currentOrderNum}`;
+            setupScreen.classList.add('hidden');
+            waitingScreen.classList.remove('hidden');
+
             if ('serviceWorker' in navigator && 'PushManager' in window) {
-                navigator.serviceWorker.register('/sw.js').then(async (registration) => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
                         const keyRes = await fetch('/api/vapid-public-key');
@@ -208,15 +178,15 @@
                         await fetch('/api/save-subscription', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orderNumber: targetNum, location: storeLocation, subscription: subscription })
+                            body: JSON.stringify({ orderNumber: currentOrderNum, location: storeLocation, subscription: subscription })
                         });
                     }
-                }).catch(err => console.log(err));
+                } catch (err) { console.log(err); }
             }
 
             trackingInterval = setInterval(async () => {
                 try {
-                    const response = await fetch(`/api/check-status?loc=${storeLocation}&num=${targetNum}`);
+                    const response = await fetch(`/api/check-status?loc=${storeLocation}&num=${currentOrderNum}`);
                     const data = await response.json();
                     if (data.ready) {
                         clearInterval(trackingInterval);
@@ -224,31 +194,8 @@
                         readyScreen.classList.remove('hidden');
                         fireExtendedAlert();
                     }
-                } catch (e) { console.log(e); }
+                } catch (e) {}
             }, 2000);
-        }
-
-        startBtn.addEventListener('click', async () => {
-            const currentOrderNum = orderInput.value.trim();
-            if (!currentOrderNum) return alert('Please enter an order number.');
-
-            activateiOSAudioEngine();
-
-            // STEP 1 FOR IPHONES: If on unsecure Safari, lock the ticket into memory and show instructions
-            if (isIOS && !isStandalone) {
-                localStorage.setItem('qamaria_saved_order', currentOrderNum); // Write lock vault element
-                setupScreen.classList.add('hidden');
-                iosScreen.classList.remove('hidden');
-                return; 
-            }
-
-            // STEP 2 FOR ANDROIDS: Proceed immediately with standard execution pipeline
-            displayNumber.innerText = currentOrderNum;
-            readyOrderBadge.innerText = `#${currentOrderNum}`;
-            setupScreen.classList.add('hidden');
-            waitingScreen.classList.remove('hidden');
-            
-            initiateTrackingLoop(currentOrderNum);
         });
     </script>
 </body>
