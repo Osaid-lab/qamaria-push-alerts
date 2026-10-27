@@ -19,9 +19,8 @@ webpush.setVapidDetails(
     PRIVATE_VAPID_KEY
 );
 
-// Database trackers
-let readyOrders = {};  // For live-checking if tab is open
-let pushRegistry = {}; // For true background pushes if tab is closed
+let readyOrders = {};  
+let pushRegistry = {}; 
 
 app.get('/api/vapid-public-key', (req, res) => {
     res.json({ publicKey: PUBLIC_VAPID_KEY });
@@ -56,19 +55,16 @@ app.post('/api/buzz-order', async (req, res) => {
     const num = String(req.body.orderNumber || '').trim();
     const uniqueKey = `${loc}-${num}`;
 
-    // 1. Mark as ready for open live browser tabs
     readyOrders[uniqueKey] = true;
 
-    // 2. Fire background push notification for closed/locked screens
     const targetSubscription = pushRegistry[uniqueKey];
     if (targetSubscription) {
-        // Appending parameters to the target URL so clicking the banner drops them right on the green screen
-        const clickUrl = `https://onrender.com{loc}&num=${num}&status=ready`;
-        
+        // FIX APPIED HERE: Removing hardcoded strings. The payload will now carry just the URL variables
         const payload = JSON.stringify({
             title: '☕ QAMARIA YEMENI COFFEE',
             body: `Your Order #${num} is ready at the counter! 😊`,
-            url: clickUrl
+            loc: loc,
+            num: num
         });
 
         try {
