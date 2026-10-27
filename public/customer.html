@@ -25,12 +25,21 @@
         .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 16px; border-radius: 12px; font-family: sans-serif; font-size: 14px; text-align: left; color: #0F4C3A; line-height: 1.5; box-sizing: border-box; }
         .review-btn { display: block; width: 100%; background: #D4AF37; color: #0F4C3A; font-weight: bold; padding: 16px; border-radius: 12px; font-size: 16px; text-decoration: none; box-sizing: border-box; margin-top: 12px; font-family: sans-serif; border: 1px solid #D4AF37; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
         .review-btn:hover { background: #bfa12d; border-color: #bfa12d; }
+        
+        /* Secondary gold action button style for iOS flow navigation */
+        .done-btn {
+            background: #D4AF37;
+            color: #0F4C3A;
+            border: 1px solid #D4AF37;
+            margin-top: 16px;
+        }
+        .done-btn:hover { background: #bfa12d; border-color: #bfa12d; }
     </style>
     <script src="https://socket.io"></script>
 </head>
 <body>
 
-    <!-- STAGE 1: IPHONE HOME SCREEN SETUP INSTRUCTIONS (Shown ONLY in raw Safari) -->
+    <!-- STAGE 1: IPHONE HOME SCREEN SETUP INSTRUCTIONS -->
     <div id="ios-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <div class="ios-box">
@@ -39,12 +48,14 @@
             <ol style="margin: 8px 0 0 20px; padding: 0;">
                 <li style="margin-bottom: 6px;">Tap the <strong>Share</strong> button at the bottom of Safari (square with upward arrow).</li>
                 <li style="margin-bottom: 6px;">Scroll down and select <strong>"Add to Home Screen"</strong> from the menu.</li>
-                <li>Launch the app icon from your home screen to input your order number!</li>
+                <li>Launch the app icon from your home screen to complete tracking!</li>
             </ol>
         </div>
+        <!-- Manual override action button -->
+        <button id="ios-done-btn" class="button done-btn">✓ Done, Let's Track!</button>
     </div>
 
-    <!-- STAGE 2: ENTRY FORM (Hidden on un-added iPhones, instantly open on home screen apps and Android) -->
+    <!-- STAGE 2: ENTRY FORM -->
     <div id="setup-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number to activate push notifications.</p>
@@ -75,6 +86,7 @@
     <script>
         const setupScreen = document.getElementById('setup-screen');
         const iosScreen = document.getElementById('ios-screen');
+        const iosDoneBtn = document.getElementById('ios-done-btn');
         const waitingScreen = document.getElementById('waiting-screen');
         const readyScreen = document.getElementById('ready-screen');
         const orderInput = document.getElementById('order-input');
@@ -102,22 +114,26 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-        // MULTI-OS ENTRY ENGINE GATEWAY RULE:
         window.addEventListener('DOMContentLoaded', () => {
             if (directStatus === 'ready' && directNum) {
-                // Instantly pop open green screen if loading from lock banner tap
                 setupScreen.classList.add('hidden');
                 readyScreen.classList.remove('hidden');
                 readyOrderBadge.innerText = `#${directNum}`;
                 activateiOSAudioEngine();
                 setTimeout(() => { fireExtendedAlert(); }, 500);
             } else if (isIOS && !isStandalone) {
-                // If iPhone user on raw Safari, show ONLY the instructions page immediately
+                // Safari shows only instructions initially
                 iosScreen.classList.remove('hidden');
             } else {
-                // If Android user OR iPhone Home Screen app, skip straight to order number entry screen!
+                // Android or true standalone Home Screen app skips directly to entry keypad!
                 setupScreen.classList.remove('hidden');
             }
+        });
+
+        // Manual skip control action for navigation override execution
+        iosDoneBtn.addEventListener('click', () => {
+            iosScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
         });
 
         function clearTrackingSession() {
