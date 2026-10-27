@@ -28,7 +28,7 @@
 </head>
 <body>
 
-    <!-- 1. ENTRY CARD (Always fully visible now) -->
+    <!-- 1. ENTRY CARD -->
     <div id="setup-screen" class="card">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number. We'll buzz you when it's ready!</p>
@@ -36,7 +36,7 @@
         <button id="start-btn">🔔 Start Tracking</button>
     </div>
 
-    <!-- 2. IPHONE SETUP INSTRUCTIONS CARD (Moved to card #2) -->
+    <!-- 2. IPHONE HOME SCREEN SETUP BRIDGE CARD -->
     <div id="ios-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <div class="ios-box">
@@ -50,7 +50,7 @@
         </div>
     </div>
 
-    <!-- 3. ACTIVE WAITING CARD -->
+    <!-- 3. LIVE TRACKER HOURGLASS SCREEN -->
     <div id="waiting-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <div class="pulse" style="font-size: 48px; margin-bottom: 20px;">⏳</div>
@@ -59,7 +59,7 @@
         <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
     </div>
 
-    <!-- 4. READY SUCCESS CARD -->
+    <!-- 4. ORDER READY SUCCESS RECEIPT CARD -->
     <div id="ready-screen" class="card ready-card hidden">
         <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
         <div class="giant-ready-text">ORDER READY! 😊</div>
@@ -92,6 +92,7 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
+        // Route directly to green card if arriving via background lock-screen click token
         if (directStatus === 'ready' && directNum) {
             setupScreen.classList.add('hidden');
             readyScreen.classList.remove('hidden');
@@ -187,14 +188,14 @@
             displayNumber.innerText = currentOrderNum;
             readyOrderBadge.innerText = `#${currentOrderNum}`;
 
-            // NEW MULTI-PAGE FLOW ROUTER: If iPhone user is on raw Safari, show layout page #2 instructions
+            // SMART ROUTING HYBRID INTERCEPT: If iPhone user is on raw Safari, shift to instructions panel card
             if (isIOS && !isStandalone) {
                 setupScreen.classList.add('hidden');
                 iosScreen.classList.remove('hidden');
                 return; 
             }
 
-            // Otherwise (Android or verified iOS Home Screen app), proceed directly into the active tracking sequence
+            // Otherwise, jump straight onto active hourglass network monitor tracking screen card 3!
             setupScreen.classList.add('hidden');
             waitingScreen.classList.remove('hidden');
 
