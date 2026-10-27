@@ -32,10 +32,19 @@ app.get('/api/check-status', (req, res) => {
     const uniqueKey = `${loc}-${num}`;
 
     if (num && readyOrders[uniqueKey]) {
-        delete readyOrders[uniqueKey];
         return res.json({ ready: true });
     }
     res.json({ ready: false });
+});
+
+app.post('/api/clear-session', (req, res) => {
+    const loc = String(req.body.location || '1').trim().toLowerCase();
+    const num = String(req.body.orderNumber || '').trim();
+    const uniqueKey = `${loc}-${num}`;
+    
+    delete readyOrders[uniqueKey];
+    delete pushRegistry[uniqueKey];
+    res.json({ success: true });
 });
 
 app.post('/api/save-subscription', (req, res) => {
@@ -46,7 +55,7 @@ app.post('/api/save-subscription', (req, res) => {
     if (!num || !sub) return res.status(400).json({ success: false });
 
     pushRegistry[`${loc}-${num}`] = sub;
-    console.log(`🔒 Secure Push background link locked for Store #${loc} Order #${num}`);
+    console.log(`🔒 Secure Push link saved for Store #${loc} Order #${num}`);
     res.json({ success: true });
 });
 
@@ -59,7 +68,7 @@ app.post('/api/buzz-order', async (req, res) => {
 
     const targetSubscription = pushRegistry[uniqueKey];
     if (targetSubscription) {
-        // FIX APPIED HERE: Removing hardcoded strings. The payload will now carry just the URL variables
+        // FIX: No more hardcoded links! We pass only the parameters package object framework.
         const payload = JSON.stringify({
             title: '☕ QAMARIA YEMENI COFFEE',
             body: `Your Order #${num} is ready at the counter! 😊`,
@@ -69,8 +78,7 @@ app.post('/api/buzz-order', async (req, res) => {
 
         try {
             await webpush.sendNotification(targetSubscription, payload);
-            console.log(`🚀 Background push sent for Order #${num}`);
-            delete pushRegistry[uniqueKey];
+            console.log(`🚀 Multi-Buzz Background alert fired out for Order #${num}`);
         } catch (err) {
             console.error("Background push failed:", err);
         }
