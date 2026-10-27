@@ -22,19 +22,37 @@
         .order-badge { background-color: #D4AF37; color: #0F4C3A; display: inline-block; font-size: 42px; font-weight: 900; padding: 4px 24px; border-radius: 12px; margin: 12px auto; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .mute-btn { background: transparent; color: #D4AF37; border: 2px solid #D4AF37; margin-bottom: 12px; padding: 12px; font-size: 14px; width: 100%; font-weight: bold; border-radius: 12px; cursor: pointer; box-sizing: border-box; }
         .mute-btn:hover { background: rgba(212, 175, 55, 0.1); }
+        .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 16px; border-radius: 12px; font-family: sans-serif; font-size: 14px; text-align: left; color: #0F4C3A; line-height: 1.5; box-sizing: border-box; }
+        .review-btn { display: block; width: 100%; background: #D4AF37; color: #0F4C3A; font-weight: bold; padding: 16px; border-radius: 12px; font-size: 16px; text-decoration: none; box-sizing: border-box; margin-top: 12px; font-family: sans-serif; border: 1px solid #D4AF37; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        .review-btn:hover { background: #bfa12d; border-color: #bfa12d; }
     </style>
+    <script src="https://socket.io"></script>
 </head>
 <body>
 
-    <!-- STAGE 1: ENTRY FORM -->
-    <div id="setup-screen" class="card">
+    <!-- STAGE 1: IPHONE HOME SCREEN SETUP INSTRUCTIONS (Shown ONLY in raw Safari) -->
+    <div id="ios-screen" class="card hidden">
+        <div class="brand-header">QAMARIA YEMENI COFFEE</div>
+        <div class="ios-box">
+            <div style="font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 15px;">🍏 iPhone Setup Required:</div>
+            To enable background pop-up alerts on Apple iOS devices:
+            <ol style="margin: 8px 0 0 20px; padding: 0;">
+                <li style="margin-bottom: 6px;">Tap the <strong>Share</strong> button at the bottom of Safari (square with upward arrow).</li>
+                <li style="margin-bottom: 6px;">Scroll down and select <strong>"Add to Home Screen"</strong> from the menu.</li>
+                <li>Launch the app icon from your home screen to input your order number!</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- STAGE 2: ENTRY FORM (Hidden on un-added iPhones, instantly open on home screen apps and Android) -->
+    <div id="setup-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number to activate push notifications.</p>
         <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="e.g. 42">
         <button id="start-btn">🔔 Start Tracking</button>
     </div>
 
-    <!-- STAGE 2: LIVE WAITING TIMER -->
+    <!-- STAGE 3: LIVE WAITING TIMER -->
     <div id="waiting-screen" class="card hidden">
         <div class="brand-header">QAMARIA YEMENI COFFEE</div>
         <div class="pulse" style="font-size: 48px; margin-bottom: 20px;">⏳</div>
@@ -43,7 +61,7 @@
         <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
     </div>
 
-    <!-- STAGE 3: ORDER READY RECEIPT -->
+    <!-- STAGE 4: ORDER READY RECEIPT -->
     <div id="ready-screen" class="card ready-card hidden">
         <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
         <div class="giant-ready-text">ORDER READY! 😊</div>
@@ -52,9 +70,11 @@
         <h2 style="font-size: 16px; margin-bottom: 24px; font-family: sans-serif; font-weight: normal; color: #fcfbf7; line-height: 1.4;">Please present this screen to the counter to collect your items.</h2>
         <button id="mute-btn" class="mute-btn">⏹️ Mute Alarm</button>
         <button onclick="clearTrackingSession()" style="background: white; color: #0F4C3A; border: 1px solid white;">Track Another Order</button>
+        <a id="review-link" href="#" target="_blank" class="review-btn">⭐ Leave a Store Review</a>
     </div>
     <script>
         const setupScreen = document.getElementById('setup-screen');
+        const iosScreen = document.getElementById('ios-screen');
         const waitingScreen = document.getElementById('waiting-screen');
         const readyScreen = document.getElementById('ready-screen');
         const orderInput = document.getElementById('order-input');
@@ -62,6 +82,7 @@
         const displayNumber = document.getElementById('display-number');
         const readyOrderBadge = document.getElementById('ready-order-badge');
         const muteBtn = document.getElementById('mute-btn');
+        const reviewLink = document.getElementById('review-link');
 
         const urlParams = new URLSearchParams(window.location.search);
         const storeLocation = urlParams.get('loc') || '1';
@@ -72,15 +93,32 @@
         let repeatingInterval = null;
         let trackingInterval = null;
 
-        if (directStatus === 'ready' && directNum) {
-            setupScreen.classList.add('hidden');
-            readyScreen.classList.remove('hidden');
-            readyOrderBadge.innerText = `#${directNum}`;
-            window.addEventListener('DOMContentLoaded', () => {
+        const reviewLinksMap = {
+            '1': 'https://google.com',
+            '2': 'https://google.com'
+        };
+        reviewLink.href = reviewLinksMap[storeLocation] || reviewLinksMap['1'];
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+        // MULTI-OS ENTRY ENGINE GATEWAY RULE:
+        window.addEventListener('DOMContentLoaded', () => {
+            if (directStatus === 'ready' && directNum) {
+                // Instantly pop open green screen if loading from lock banner tap
+                setupScreen.classList.add('hidden');
+                readyScreen.classList.remove('hidden');
+                readyOrderBadge.innerText = `#${directNum}`;
                 activateiOSAudioEngine();
                 setTimeout(() => { fireExtendedAlert(); }, 500);
-            });
-        }
+            } else if (isIOS && !isStandalone) {
+                // If iPhone user on raw Safari, show ONLY the instructions page immediately
+                iosScreen.classList.remove('hidden');
+            } else {
+                // If Android user OR iPhone Home Screen app, skip straight to order number entry screen!
+                setupScreen.classList.remove('hidden');
+            }
+        });
 
         function clearTrackingSession() {
             fetch('/api/clear-session', {
