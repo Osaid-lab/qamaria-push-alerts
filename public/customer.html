@@ -5,108 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Qamaria Yemeni Coffee - Order Tracker</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
-        /* FIXED CORE LAYOUT: Shifting from heights to an absolute fullscreen bounding container */
-        html, body { 
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            margin: 0; 
-            padding: 0; 
-            background-color: #fcfbf7; 
-            box-sizing: border-box; 
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-        }
-        /* Uses absolute margins to keep the workspace safely centered and away from the edges */
-        .wrapper { 
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 16px; 
-            padding-bottom: calc(20px + env(safe-area-inset-bottom, 24px));
-            box-sizing: border-box; 
-        }
-        /* Reduced padding and size constraints to ensure it never overflows on small screens */
-        .card { 
-            width: 100%; 
-            max-width: 330px; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 15px 35px -5px rgba(15, 76, 58, 0.15); 
-            border: 1px solid #f1efe7; 
-            text-align: center; 
-            box-sizing: border-box; 
-        }
-        .brand-header { color: #0F4C3A; font-size: 22px; font-weight: bold; margin-bottom: 16px; letter-spacing: 1px; line-height: 1.3; }
-        input { width: 100%; text-align: center; font-size: 24px; padding: 12px; border: 2px solid #e2dfd5; border-radius: 12px; margin-bottom: 14px; font-weight: bold; color: #0F4C3A; background: #faf9f5; box-sizing: border-box; }
+        body { background-color: #fcfbf7; font-family: 'Georgia', serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 24px; color: #1c1917; box-sizing: border-box; }
+        .card { width: 100%; max-width: 350px; background: white; padding: 32px; border-radius: 20px; box-shadow: 0 15px 35px -5px rgba(15, 76, 58, 0.15); border: 1px solid #f1efe7; text-align: center; box-sizing: border-box; }
+        .brand-header { color: #0F4C3A; font-size: 24px; font-weight: bold; margin-bottom: 24px; letter-spacing: 1px; line-height: 1.3; }
+        input { width: 100%; text-align: center; font-size: 26px; padding: 12px; border: 2px solid #e2dfd5; border-radius: 12px; margin-bottom: 16px; font-weight: bold; color: #0F4C3A; background: #faf9f5; box-sizing: border-box; }
         input:focus { outline: none; border-color: #0F4C3A; }
-        button { width: 100%; background: #0F4C3A; color: white; font-weight: bold; padding: 14px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; transition: background 0.2s; border: 1px solid #0F4C3A; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        button { width: 100%; background: #0F4C3A; color: white; font-weight: bold; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; transition: background 0.2s; border: 1px solid #0F4C3A; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         button:hover { background: #0a3327; }
         .hidden { display: none !important; }
         .ready-card { background: #0F4C3A; color: white; border: 1px solid #0F4C3A; }
         .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; color: #D4AF37; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
-        .giant-ready-text { color: #D4AF37; font-size: 26px; font-weight: 900; letter-spacing: 0.5px; margin-top: 16px; margin-bottom: 12px; font-family: 'Georgia', serif; white-space: nowrap; }
-        .order-badge { background-color: #D4AF37; color: #0F4C3A; display: inline-block; font-size: 38px; font-weight: 900; padding: 4px 20px; border-radius: 12px; margin: 10px auto; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .giant-ready-text { color: #D4AF37; font-size: 28px; font-weight: 900; letter-spacing: 0.5px; margin-top: 24px; margin-bottom: 16px; font-family: 'Georgia', serif; white-space: nowrap; }
+        .order-badge { background-color: #D4AF37; color: #0F4C3A; display: inline-block; font-size: 42px; font-weight: 900; padding: 4px 24px; border-radius: 12px; margin: 12px auto; font-family: sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .mute-btn { background: transparent; color: #D4AF37; border: 2px solid #D4AF37; margin-bottom: 12px; padding: 12px; font-size: 14px; width: 100%; font-weight: bold; border-radius: 12px; cursor: pointer; box-sizing: border-box; }
         .mute-btn:hover { background: rgba(212, 175, 55, 0.1); }
-        .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 14px; border-radius: 12px; font-family: sans-serif; font-size: 13px; text-align: left; color: #0F4C3A; margin-top: 10px; line-height: 1.4; box-sizing: border-box; }
+        .ios-box { background-color: #f1efe7; border: 1px dashed #0F4C3A; padding: 16px; border-radius: 12px; font-family: sans-serif; font-size: 14px; text-align: left; color: #0F4C3A; margin-top: 16px; line-height: 1.5; box-sizing: border-box; }
     </style>
     <script src="https://socket.io"></script>
 </head>
 <body>
-    <div class="wrapper">
-        <!-- 1. ENTRY CARD -->
-        <div id="setup-screen" class="card">
-            <div class="brand-header">QAMARIA YEMENI COFFEE</div>
-            <p style="color: #6b6661; font-size: 13px; margin-bottom: 16px; font-family: sans-serif;">Enter your order number. We'll buzz you when it's ready!</p>
-            <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="e.g. 42">
-            <button id="start-btn">🔔 Start Tracking</button>
-            <div id="ios-instructions" class="hidden ios-box">
-                <div style="font-weight: bold; text-align: center; margin-bottom: 4px; font-size: 13px;">🍏 iPhone Setup Required:</div>
-                To unlock true background pop-up alerts on Apple devices:
-                <ol style="margin: 4px 0 0 16px; padding: 0;">
-                    <li>Tap the <strong>Share</strong> button at the bottom of Safari.</li>
-                    <li>Select <strong>"Add to Home Screen"</strong> from the menu.</li>
-                    <li>Open the home screen app to track your order!</li>
-                </ol>
-            </div>
-        </div>
 
-        <!-- 2. LOADING CARD -->
-        <div id="waiting-screen" class="card hidden">
-            <div class="brand-header">QAMARIA YEMENI COFFEE</div>
-            <div class="pulse" style="font-size: 44px; margin-bottom: 16px;">⏳</div>
-            <h2 style="font-size: 20px; margin-bottom: 6px; color: #0F4C3A;">Tracking Order #<span id="display-number"></span></h2>
-            <p style="color: #6b6661; font-size: 13px; font-family: sans-serif; margin-bottom: 14px;">Your traditional brew is being crafted. You can safely close this screen or lock your phone!</p>
-            <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
-        </div>
+    <!-- 1. ENTRY CARD (Always fully visible now) -->
+    <div id="setup-screen" class="card">
+        <div class="brand-header">QAMARIA YEMENI COFFEE</div>
+        <p style="color: #6b6661; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Enter your order number. We'll buzz you when it's ready!</p>
+        <input type="number" pattern="[0-9]*" inputmode="numeric" id="order-input" placeholder="e.g. 42">
+        <button id="start-btn">🔔 Start Tracking</button>
+    </div>
 
-        <!-- 3. SUCCESS CARD -->
-        <div id="ready-screen" class="card ready-card hidden">
-            <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
-            <div class="giant-ready-text">ORDER READY! 😊</div>
-            <div class="text-xs uppercase tracking-widest text-emerald-200 font-sans font-bold">Verify Counter Receipt</div>
-            <div id="ready-order-badge" class="order-badge">#--</div>
-            <h2 style="font-size: 15px; margin-bottom: 20px; font-family: sans-serif; font-weight: normal; color: #fcfbf7; line-height: 1.4;">Please present this screen to the counter to collect your items.</h2>
-            <button id="mute-btn" class="mute-btn">⏹️ Mute Alarm</button>
-            <button onclick="clearTrackingSession()" style="background: white; color: #0F4C3A; border: 1px solid white;">Track Another Order</button>
+    <!-- 2. IPHONE SETUP INSTRUCTIONS CARD (Moved to card #2) -->
+    <div id="ios-screen" class="card hidden">
+        <div class="brand-header">QAMARIA YEMENI COFFEE</div>
+        <div class="ios-box">
+            <div style="font-weight: bold; text-align: center; margin-bottom: 8px; font-size: 15px;">🍏 iPhone Setup Required:</div>
+            To enable background pop-up alerts on Apple iOS devices:
+            <ol style="margin: 8px 0 0 20px; padding: 0;">
+                <li style="margin-bottom: 6px;">Tap the <strong>Share</strong> button at the bottom of Safari (square with upward arrow).</li>
+                <li style="margin-bottom: 6px;">Scroll down and select <strong>"Add to Home Screen"</strong> from the menu.</li>
+                <li>Close Safari and launch the app icon from your home screen to complete your tracking!</li>
+            </ol>
         </div>
+    </div>
+
+    <!-- 3. ACTIVE WAITING CARD -->
+    <div id="waiting-screen" class="card hidden">
+        <div class="brand-header">QAMARIA YEMENI COFFEE</div>
+        <div class="pulse" style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+        <h2 style="font-size: 22px; margin-bottom: 8px; color: #0F4C3A;">Tracking Order #<span id="display-number"></span></h2>
+        <p style="color: #6b6661; font-size: 14px; font-family: sans-serif; margin-bottom: 16px;">Your traditional brew is being crafted. You can safely close this screen or lock your phone!</p>
+        <p style="color: #0F4C3A; background-color: #f1efe7; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin: 0; font-family: sans-serif; border: 1px solid #e2dfd5;">⚠️ MUST turn ON iPhone Ringer Switch (on the side of your phone)!</p>
+    </div>
+
+    <!-- 4. READY SUCCESS CARD -->
+    <div id="ready-screen" class="card ready-card hidden">
+        <div class="brand-header" style="color: white; margin-bottom: 0;">QAMARIA YEMENI COFFEE</div>
+        <div class="giant-ready-text">ORDER READY! 😊</div>
+        <div class="text-xs uppercase tracking-widest text-emerald-200 font-sans font-bold">Verify Counter Receipt</div>
+        <div id="ready-order-badge" class="order-badge">#--</div>
+        <h2 style="font-size: 16px; margin-bottom: 24px; font-family: sans-serif; font-weight: normal; color: #fcfbf7; line-height: 1.4;">Please present this screen to the counter to collect your items.</h2>
+        <button id="mute-btn" class="mute-btn">⏹️ Mute Alarm</button>
+        <button onclick="clearTrackingSession()" style="background: white; color: #0F4C3A; border: 1px solid white;">Track Another Order</button>
     </div>
     <script>
         const setupScreen = document.getElementById('setup-screen');
+        const iosScreen = document.getElementById('ios-screen');
         const waitingScreen = document.getElementById('waiting-screen');
         const readyScreen = document.getElementById('ready-screen');
         const orderInput = document.getElementById('order-input');
@@ -135,9 +100,6 @@
                 activateiOSAudioEngine();
                 setTimeout(() => { fireExtendedAlert(); }, 500);
             });
-        } else if (isIOS && !isStandalone) {
-            startBtn.classList.add('hidden');
-            document.getElementById('ios-instructions').classList.remove('hidden');
         }
 
         function clearTrackingSession() {
@@ -224,6 +186,15 @@
             activateiOSAudioEngine();
             displayNumber.innerText = currentOrderNum;
             readyOrderBadge.innerText = `#${currentOrderNum}`;
+
+            // NEW MULTI-PAGE FLOW ROUTER: If iPhone user is on raw Safari, show layout page #2 instructions
+            if (isIOS && !isStandalone) {
+                setupScreen.classList.add('hidden');
+                iosScreen.classList.remove('hidden');
+                return; 
+            }
+
+            // Otherwise (Android or verified iOS Home Screen app), proceed directly into the active tracking sequence
             setupScreen.classList.add('hidden');
             waitingScreen.classList.remove('hidden');
 
