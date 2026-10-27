@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qamaria - Barista Counter Pad</title>
+    <style>
+        body { background-color: #0F4C3A; font-family: 'Georgia', serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 24px; color: #1c1917; }
+        .card { width: 100%; max-width: 350px; background: white; padding: 32px; border-radius: 20px; box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.3); text-align: center; }
+        .brand-header { color: #0F4C3A; font-size: 26px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .brand-subtitle { color: #D4AF37; font-size: 13px; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; margin-bottom: 4px; margin-top: 0; }
+        .loc-badge { font-family: sans-serif; font-size: 14px; font-weight: bold; color: #0F4C3A; background-color: #f1efe7; display: inline-block; padding: 4px 14px; border-radius: 20px; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #e2dfd5;}
+        input { width: 90%; text-align: center; font-size: 36px; padding: 12px; border: 2px solid #e2dfd5; border-radius: 12px; margin-bottom: 20px; font-weight: bold; color: #0F4C3A; background: #faf9f5; }
+        input:focus { outline: none; border-color: #D4AF37; }
+        button { width: 100%; background: #D4AF37; color: #0F4C3A; font-weight: bold; padding: 18px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; transition: background 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        button:hover { background: #c5a12e; }
+        #toast-feedback { opacity: 0; transition: opacity 0.3s; color: #0F4C3A; font-weight: bold; font-size: 14px; font-family: sans-serif; margin-top: 16px; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand-header">QAMARIA</div>
+        <div class="brand-subtitle">Push Notification Pad</div>
+        <div id="location-display" class="loc-badge">Store #--</div>
+        <input type="number" pattern="[0-9]*" inputmode="numeric" id="quick-order-input" placeholder="000">
+        <button id="notify-btn">📣 Buzz Customer</button>
+        <p id="toast-feedback">✓ Push Notification Dispatched</p>
+    </div>
+    <script>
+        const orderInput = document.getElementById('quick-order-input');
+        const notifyBtn = document.getElementById('notify-btn');
+        const feedback = document.getElementById('toast-feedback');
+        const locDisplay = document.getElementById('location-display');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const storeLocation = urlParams.get('loc') || '1';
+        locDisplay.innerText = `Store #${storeLocation}`;
+
+        window.addEventListener('DOMContentLoaded', () => orderInput.focus());
+
+        async function triggerAlert() {
+            const num = orderInput.value.trim();
+            if (!num) return;
+
+            try {
+                const response = await fetch('/api/buzz-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderNumber: num, location: storeLocation })
+                });
+
+                if (response.ok) {
+                    orderInput.value = '';
+                    orderInput.focus();
+                    feedback.style.opacity = '1';
+                    setTimeout(() => { feedback.style.opacity = '0'; }, 2000);
+                } else {
+                    alert("Device link token not found for this order slot position.");
+                }
+            } catch (e) {
+                alert("Failed to reach background server connection line.");
+            }
+        }
+
+        notifyBtn.addEventListener('click', triggerAlert);
+        orderInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') triggerAlert(); });
+    </script>
+</body>
+</html>
